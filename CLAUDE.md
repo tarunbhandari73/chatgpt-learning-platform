@@ -56,7 +56,11 @@ These were chosen explicitly by the user via `AskUserQuestion`. Do not revisit w
 - API key issued, stored in `RESEND_API_KEY`. No sending domain yet — use `onboarding@resend.dev` for Phase 1.
 
 ### Vercel
-- Not yet linked. Will happen in Step 10.
+- Hobby plan, signed up via GitHub.
+- One project linked to this repo: **`privacyguard`** (renamed from the auto-imported `chatgpt-learning-platform`). Deploys to `privacyguard.vercel.app`.
+- A duplicate auto-import (`chatgpt-learning-platform-rjpg`) was deleted.
+- Environment variables **not yet added** to the Vercel project — preview deploys of this branch will fail until they are. This will be done as part of Step 3's verification or Step 10's deploy.
+- Vercel auto-builds every push to this branch as a preview at a generated URL.
 
 ### GitHub
 - Remote: `tarunbhandari73/chatgpt-learning-platform`
