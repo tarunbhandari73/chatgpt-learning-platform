@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: [
+    "firebase-admin",
+    "@google-cloud/kms",
+    "google-gax",
+    "encoding",
+  ],
 };
 
 export default nextConfig;

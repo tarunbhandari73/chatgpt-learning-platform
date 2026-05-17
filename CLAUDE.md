@@ -10,7 +10,7 @@
 
 **Product name:** PrivacyGuard
 **Repo name:** `chatgpt-learning-platform` (legacy; predates pivot)
-**Working branch:** `claude/digital-footprint-removal-tool-8Q7bp`
+**Working branch:** `claude/digital-footprint-monitor-DUCFF` (previous session used `claude/digital-footprint-removal-tool-8Q7bp`; work merged in)
 **Detailed plan file:** `/root/.claude/plans/i-want-to-create-playful-river.md`
 
 **What we're building:** A personal digital-footprint-removal tool, similar in spirit to DeleteMe / Incogni / Kanary. It scans data-broker / people-search sites for the user's PII, submits opt-out / removal requests on a recurring schedule, follows up until each request is closed, and shows a dashboard with counts (found, submitted, pending, removed) plus age of pending requests.
@@ -72,7 +72,7 @@ These were chosen explicitly by the user via `AskUserQuestion`. Do not revisit w
 
 - **Branch:** all development on `claude/digital-footprint-removal-tool-8Q7bp`. Never push to other branches without explicit permission.
 - **Commits:** one logical step per commit. Title pattern: `Step N: <what>` or `Phase N: <what>` or `chore: <what>`. Body explains the why and includes a verification note when relevant. End every commit with the Claude session footer.
-- **Push:** `git push -u origin claude/digital-footprint-removal-tool-8Q7bp` after each successful step. Retry up to 4× with exponential backoff (2s, 4s, 8s, 16s) on network errors.
+- **Push:** `git push -u origin claude/digital-footprint-monitor-DUCFF` after each successful step. Retry up to 4× with exponential backoff (2s, 4s, 8s, 16s) on network errors.
 - **Pull requests:** do NOT create one unless the user explicitly asks.
 - **GitHub comments:** be frugal; only post when genuinely needed.
 - **Hooks:** a `stop-hook-git-check.sh` nags about uncommitted changes. Treat its feedback as user instruction. Auto-commits from earlier sessions are possible — don't be surprised by extra commits in `git log` you didn't make.
@@ -88,7 +88,8 @@ Plan steps (see `/root/.claude/plans/i-want-to-create-playful-river.md` for full
 | Phase 0 | External setup (Firebase, KMS, Resend, billing) | ✅ Done | — |
 | 1 | Scaffold Next.js 16 + Phase 1 deps | ✅ Done | `46ff5a3` |
 | 2 | Firebase client + admin SDK wiring (+ smoke test) | ✅ Done | `9cd286f` |
-| 3 | Auth pages (login, AuthProvider) | ⏳ Pending |  |
+| 3 | Auth pages (login, AuthProvider) | ✅ Done | `5fe3ec3` |
+| 3b | Fix Vercel build: add serverExternalPackages to next.config.ts | ✅ Done | (this session) |
 | 4 | Firestore rules + indexes | ⏳ Pending |  |
 | 5 | KMS-encrypted PII profile editor | ⏳ Pending |  |
 | 6 | Seed broker registry + ManualAssistAdapter | ⏳ Pending |  |
@@ -147,6 +148,7 @@ These are real things that tripped us up. Read these before you make a similar m
 4. **`import "server-only"` breaks `tsx` script execution** outside a Next.js context — the `server-only` package throws by design. We removed it from `src/lib/firebase/admin.ts` so the verify script could run. Trade-off: lost the build-time guard against accidentally importing Admin SDK from client code. Mitigation: `firebase-admin` itself uses Node-only APIs and would fail to bundle for client. Re-add `server-only` in route handlers / dedicated server files where they exist.
 5. **tsx auto-loads `.env` and `.env.local`** — explicit `dotenv.config({ path: ".env.local" })` is redundant but harmless. Don't waste energy ripping it out.
 6. **Firebase Console UI was reorganized.** Authentication is no longer under "Build → Authentication" — it's under "Product categories → Security → Authentication". Don't trust pre-2025 muscle memory.
+11. **`firebase-admin` and `@google-cloud/kms` must be in `serverExternalPackages`** in `next.config.ts`. Without this, Vercel's webpack bundler tries to include them in the server bundle, fails on native modules (`undici`, `encoding`, `google-gax`), and the preview deploy errors. Fix: `serverExternalPackages: ["firebase-admin", "@google-cloud/kms", "google-gax", "encoding"]`. Build is verified clean after this fix.
 7. **GCP free trial requires a credit card** but does NOT auto-charge after the trial. Mention this clearly to non-technical users so they don't refuse the trial out of fear.
 8. **Service-account JSON contents and the Resend API key were displayed in the chat transcript** at upload/paste time. After we have a working end-to-end test, rotate both keys (Firebase Console → Service accounts → delete old + generate new; Resend → API Keys → revoke + create new). See "Pending hygiene tasks" below.
 9. **Firestore region `asia-south2` = New Delhi**, `asia-south1` = Mumbai. The user said "India, New Delhi" → `asia-south2`. KMS key ring is in the same region for latency.
