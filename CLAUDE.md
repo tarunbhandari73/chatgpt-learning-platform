@@ -90,7 +90,7 @@ Plan steps (see `/root/.claude/plans/i-want-to-create-playful-river.md` for full
 | 2 | Firebase client + admin SDK wiring (+ smoke test) | ✅ Done | `9cd286f` |
 | 3 | Auth pages (login, AuthProvider) | ✅ Done | `5fe3ec3` |
 | 3b | Fix Vercel build: add serverExternalPackages to next.config.ts | ✅ Done | (this session) |
-| 4 | Firestore rules + indexes | ⏳ Pending |  |
+| 4 | Firestore rules + indexes | ✅ Done | (this session) |
 | 5 | KMS-encrypted PII profile editor | ⏳ Pending |  |
 | 6 | Seed broker registry + ManualAssistAdapter | ⏳ Pending |  |
 | 7 | Findings + Requests + Queue UI | ⏳ Pending |  |
@@ -108,9 +108,10 @@ Already exist:
 - `src/lib/firebase/client.ts` — singleton wrapper around the Firebase Web SDK (client components)
 - `src/lib/firebase/admin.ts` — singleton wrapper around firebase-admin (server-only; reads service account from `FIREBASE_SERVICE_ACCOUNT_B64`)
 - `scripts/verifyFirebase.ts` — one-shot smoke test; run with `npx tsx scripts/verifyFirebase.ts`
+- `firestore.rules` — security rules: users own their data, brokers are read-only to clients, schedules are Admin-only
+- `firestore.indexes.json` — composite indexes on requests (status+nextCheckAt, status+submittedAt) and findings (brokerId+discoveredAt)
 
 Coming in upcoming steps:
-- `firestore.rules`, `firestore.indexes.json` — security rules + composite indexes
 - `src/lib/crypto/pii.ts` — KMS envelope encrypt/decrypt
 - `src/lib/brokers/types.ts` — `BrokerAdapter` interface
 - `src/lib/brokers/registry.ts`, `src/lib/brokers/manualAssist.ts`, `src/lib/brokers/adapters/*.ts`
