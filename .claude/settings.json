@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Running security check...",
+            "command": "python3 .claude/security-check.py 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
