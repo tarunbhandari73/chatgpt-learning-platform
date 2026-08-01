@@ -28,7 +28,11 @@ These were chosen explicitly by the user via `AskUserQuestion`. Do not revisit w
 | Hosting + scheduler | Next.js (App Router) on **Vercel** + Firebase Auth/Firestore + **Vercel Cron** (hourly tick; pick users whose `scheduleHour == currentUtcHour`) |
 | Automation depth | **Manual-assist first**; upgrade brokers to automated search / email opt-out gradually. Never lie about autonomy. |
 | PII encryption | **Google Cloud KMS** envelope encryption; ciphertext in Firestore, server-only decrypts |
-| MVP broker scope | **10 popular US people-search sites**: Spokeo, BeenVerified, Whitepages, MyLife, PeopleFinder, Radaris, Intelius, TruePeopleSearch, FastPeopleSearch, USSearch |
+| MVP broker scope | **SUPERSEDED — pending discovery.** Originally "10 popular US people-search sites" (Spokeo, BeenVerified, Whitepages, MyLife, PeopleFinder, Radaris, Intelius, TruePeopleSearch, FastPeopleSearch, USSearch). User is **India-based**, so a US-only registry may find nothing. Decision: **run a real discovery pass first**, then build the Step 6 registry from evidence. Do not seed brokers until discovery output exists. |
+| User scope | **Single user (just the owner).** Auth is still built properly, but no multi-tenancy, billing, or admin panel. |
+| Region | **India.** DPDP Act 2023 is the governing law, not CCPA/GDPR — though most large brokers honour CCPA/GDPR-style requests regardless of requester location. |
+| Notifications | **Daily email digest** (one per day, batching manual actions + status changes) **plus** the dashboard for on-demand status. No per-event emails. |
+| Phase 3 automation | **Keep Playwright / Cloud Run / 2Captcha in the plan** as originally designed. The Claude + Chrome connector route (see §12) is a complementary near-term path, not a replacement. |
 | Dev workflow | **Cloud-only.** All code work happens in this sandbox. User stays in the browser (Firebase Console, GCP Console, Vercel, GitHub). No local clone on the user's Mac. |
 | Firebase project | Keep the existing project `chatgpt-learning-platfor-c592a`; display name renamed to "PrivacyGuard". Project ID is immutable. |
 | Email provider | **Resend** (free tier covers Phase 1 from `onboarding@resend.dev`). Custom domain comes in Phase 2 when we email brokers. |
@@ -192,3 +196,47 @@ Per `AGENTS.md`: this is Next.js 16, with breaking changes from earlier versions
 - `import "server-only"` is the standard guard for server-only modules (skip in standalone scripts — see §8.4)
 - Vercel Cron is configured in `vercel.json` with a `crons` array; minimum tick is hourly on the free tier
 - Use `route.ts` files for API routes (not `pages/api`)
+
+---
+
+## 12. The "Digital Footprint Eraser Guide 2026" PDF — assessment
+
+The user uploaded a third-party PDF guide and asked how it compares to this build. Summary of that
+analysis, so a future session doesn't have to redo it.
+
+**What the PDF is:** a prompt pack, not an architecture. Four prompts pasted into Claude.ai chat +
+the Chrome connector for submissions + a Claude scheduled task for weekly rechecks. No code, no
+infrastructure, ~5 min setup.
+
+**Where the PDF genuinely beats us:**
+- It has a *working discovery mechanism* (Claude web search) — PrivacyGuard Phase 1 has none.
+- It has a *working submission mechanism* (Chrome connector fills real opt-out forms) — ours is
+  manual-assist only until Phase 3.
+- Unbounded broker coverage: it finds whatever exists, rather than a hand-curated fixed list.
+- Not region-locked in practice — a web search surfaces Indian exposure as readily as US.
+
+**Where PrivacyGuard genuinely beats the PDF:**
+- Durable, queryable state. A chat transcript cannot answer "how long has this been pending?" three
+  months later. That was the user's *explicit* original requirement.
+- KMS-encrypted PII at rest vs. PII sitting in chat history.
+- Structured evidence + audit trail per request; survives context loss.
+
+**Where the PDF oversells (do not copy this framing):** "Runs while you sleep", "Auto", "Claude does
+the entire thing for you" — contradicted by its own troubleshooting table, which concedes CAPTCHAs,
+email confirmation links, phone verification and ID checks all require the human. Our
+"assisted opt-out" framing (§1) is the accurate one. Keep it.
+
+**Resulting decisions:**
+1. **Discovery-first.** Before seeding the Step 6 broker registry, run a real discovery pass against
+   the user's actual name / phone / email and build the registry from what comes back. Prevents
+   shipping a US-only registry to an India-based user.
+2. **Phase 3 stays.** User explicitly chose to keep Playwright / Cloud Run / 2Captcha rather than
+   relying solely on Claude + Chrome. Treat the Claude + Chrome route as a complementary near-term
+   path that de-risks Phase 3, not as a replacement for it.
+3. **Bulk-import path needed.** Step 7 should accept a pasted/structured discovery result and turn it
+   into tracked `findings` in one action, so output from a Claude discovery run feeds the system of
+   record cleanly.
+
+Extracted text of the PDF (for reference, if needed again):
+`/tmp/claude-0/-home-user-chatgpt-learning-platform/e3dc8d06-0e0e-5352-8fdc-c0ce13b6d24e/scratchpad/pdf.txt`
+(scratchpad is ephemeral — re-extract from the upload if missing).
